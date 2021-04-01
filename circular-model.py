@@ -46,6 +46,7 @@ class Window(QMainWindow):
         canvasPainter.drawImage(0, 0, self.image1)
         # self.width / 2 + 20  <->  600 + 20
         canvasPainter.drawImage(620, 0, self.image2)
+        self.draw_center()
 
     def mousePressEvent(self, cursor_event):
         x, y = cursor_event.pos().x(), cursor_event.pos().y()
@@ -82,10 +83,28 @@ class Window(QMainWindow):
             self.draw_points_and_line()
             self.update()
 
+    def draw_center(self):
+        self.painter1.setPen(QPen(
+            Qt.yellow, 15,
+            Qt.SolidLine,  
+            Qt.RoundCap,
+            Qt.RoundJoin
+        ))
+        self.painter2.setPen(QPen(
+            Qt.yellow, 15,
+            Qt.SolidLine,  
+            Qt.RoundCap,
+            Qt.RoundJoin
+        ))
+        self.painter1.drawPoint(QPoint(int(self.image1.width() / 2), int(self.image1.height() / 2)))
+        self.painter2.drawPoint(QPoint(int(self.image2.width() / 2), int(self.image2.height() / 2)))
+        self.update()
+
     def draw_points_and_line(self):
         R = int(self.image1.width() / 2)
         self.image1.fill(Qt.black)
         self.image2.fill(Qt.black)
+        self.draw_center()
         self.painter1.setPen(QPen(
             Qt.white, 10,
             Qt.SolidLine,  
