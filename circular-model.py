@@ -126,6 +126,7 @@ class Window(QMainWindow):
             Qt.RoundCap,
             Qt.RoundJoin
         ))
+        self.painter1.drawLine(QPoint(self.points[0][0], self.points[0][1]), QPoint(self.points[1][0], self.points[1][1]))
         # -R, move center to (0, 0). Map points from (0, 580) - > (-290, 290)
         x1, x2 = self.points[0][0] - R, self.points[1][0] - R
         y1, y2 = self.points[0][1] - R, self.points[1][1] - R
@@ -138,7 +139,7 @@ class Window(QMainWindow):
             x = int(np.around(x1 + (d * (x2 - x1)) / distance))
             y = int(np.around(y1 + (d * (y2 - y1)) / distance))
             ground = np.sqrt(x**2 + y**2 + R**2)
-            self.painter1.drawPoint(x + R, y + R)
+            # self.painter1.drawPoint(x + R, y + R)
             self.painter2.drawPoint(
                 int(np.around(R + (R * x) / ground)),
                 int(np.around(R + (R * y) / ground))
