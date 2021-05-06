@@ -139,7 +139,6 @@ class Window(QMainWindow):
             x = int(np.around(x1 + (d * (x2 - x1)) / distance))
             y = int(np.around(y1 + (d * (y2 - y1)) / distance))
             ground = np.sqrt(x**2 + y**2 + R**2)
-            # self.painter1.drawPoint(x + R, y + R)
             self.painter2.drawPoint(
                 int(np.around(R + (R * x) / ground)),
                 int(np.around(R + (R * y) / ground))
