@@ -156,10 +156,6 @@ class Window(QMainWindow):
                 bezier_point[1] - self.R,
                 self.radius_slider.value()
             ]))
-            self.painter2.drawPoint(
-                int(colineation_point[0] + self.R),
-                int(colineation_point[1] + self.R)
-            )
 
             self.painter2.setPen(QPen(
                 Qt.cyan, 1,
@@ -168,11 +164,23 @@ class Window(QMainWindow):
                 Qt.RoundJoin
             ))
             # Bezier point after colineation in circular model
-            ground = np.sqrt(colineation_point[0]**2 + colineation_point[1]**2 + self.radius_slider.value()**2)
-            self.painter2.drawPoint(
-                int(np.around(self.R + (self.radius_slider.value() * colineation_point[0]) / ground)),
-                int(np.around(self.R + (self.radius_slider.value() * colineation_point[1]) / ground))
-            )
+            ground = np.sqrt(colineation_point[0]**2 + colineation_point[1]**2 + colineation_point[2]**2)
+           
+            if colineation_point[2] > 0:
+                new_x = int(np.around(self.R + (self.radius_slider.value() * colineation_point[0]) / ground))
+                new_y = int(np.around(self.R + (self.radius_slider.value() * colineation_point[1]) / ground))
+                self.painter2.drawPoint(new_x, new_y)
+            elif colineation_point[2] < 0:
+                new_x = int(np.around(self.R + (-self.radius_slider.value() * colineation_point[0]) / ground))
+                new_y = int(np.around(self.R + (-self.radius_slider.value() * colineation_point[1]) / ground))
+                self.painter2.drawPoint(new_x, new_y)
+            else:
+                new_x1 = int(np.around(self.R + (self.radius_slider.value() * colineation_point[0]) / ground))
+                new_y1 = int(np.around(self.R + (self.radius_slider.value() * colineation_point[1]) / ground))
+                new_x2 = int(np.around(self.R + (-self.radius_slider.value() * colineation_point[0]) / ground))
+                new_y2 = int(np.around(self.R + (-self.radius_slider.value() * colineation_point[1]) / ground))
+                self.painter2.drawPoint(new_x1, new_y1)
+                self.painter2.drawPoint(new_x2, new_y2)
 
 
     def draw_center(self):
