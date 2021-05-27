@@ -8,7 +8,7 @@ class Window(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        title = "Colineation in circular model"
+        title = "Entire bezier curve in circular model"
         top = 400
         left = 100
         width = 1200
@@ -86,18 +86,20 @@ class Window(QMainWindow):
             x <= self.image1.width() and x >= 0 and
             self.nearest == -1
         ):
-            self.painter1.setPen(QPen(
-                Qt.white, 10,
-                Qt.SolidLine,  
-                Qt.RoundCap,
-                Qt.RoundJoin
-            ))
-            self.points.append(np.array([x, y]))
-            self.painter1.drawPoint(x, y)
-            self.update()
+            if len(self.points) < 3:
+                self.painter1.setPen(QPen(
+                    Qt.white, 10,
+                    Qt.SolidLine,  
+                    Qt.RoundCap,
+                    Qt.RoundJoin
+                ))
 
-            if len(self.points) > 1:
-                self.draw_all()
+                self.points.append(np.array([x, y]))
+                self.painter1.drawPoint(x, y)
+                self.update()
+
+                if len(self.points) > 1:
+                    self.draw_all()
 
     def draw_all(self):
         self.draw_points()
@@ -120,7 +122,7 @@ class Window(QMainWindow):
             self.painter1.drawPoint(p[0], p[1])
 
     def draw_bezier_point_and_colineation(self, t):
-        if len(self.points) > 0:
+        if len(self.points) == 3:
             points = self.points.copy()
             while len(points) > 1:
                 edges = []
@@ -142,19 +144,35 @@ class Window(QMainWindow):
                 Qt.RoundJoin
             ))
             self.painter1.drawPoint(bezier_point[0], bezier_point[1])
-            
-            self.painter2.setPen(QPen(
-                Qt.green, 1,
-                Qt.SolidLine,  
-                Qt.RoundCap,
-                Qt.RoundJoin
-            ))
 
-            # Bezier point after colineation
-            colineation_point = self.colineation_matrix.dot(np.array([
-                bezier_point[0] - self.R,
-                bezier_point[1] - self.R,
+            # self.points[0][0] -= self.R
+            # self.points[0][1] -= self.R
+            # self.points[1][0] -= self.R
+            # self.points[1][1] -= self.R
+            # self.points[2][0] -= self.R
+            # self.points[2][1] -= self.R
+
+            basic_bezier = np.array([
+                (1 - t)**2 * self.points[0][0] + 2*(1 - t) * t * self.points[1][0] + t**2 * self.points[2][0],
+                (1 - t)**2 * self.points[0][1] + 2*(1 - t) * t * self.points[1][1] + t**2 * self.points[2][1],
                 self.radius_slider.value()
+            ])
+            rest_bezier = np.array([
+                (1 - t)**2 * (self.points[0][0] - self.R) - 2*(1 - t) * t * (self.points[1][0] - self.R) + t**2 * (self.points[2][0] - self.R),
+                (1 - t)**2 * (self.points[0][1] - self.R) - 2*(1 - t) * t * (self.points[1][1] - self.R) + t**2 * (self.points[2][1] - self.R),
+                (1 - 2*t)**2 * self.radius_slider.value()
+            ])
+            
+            # Bezier point after colineation
+            basic_colineation_point = self.colineation_matrix.dot(np.array([
+                basic_bezier[0] - self.R,
+                basic_bezier[1] - self.R,
+                basic_bezier[2]
+            ]))
+            rest_colineation_point = self.colineation_matrix.dot(np.array([
+                rest_bezier[0],
+                rest_bezier[1],
+                rest_bezier[2]
             ]))
 
             self.painter2.setPen(QPen(
@@ -164,23 +182,45 @@ class Window(QMainWindow):
                 Qt.RoundJoin
             ))
             # Bezier point after colineation in circular model
-            ground = np.sqrt(colineation_point[0]**2 + colineation_point[1]**2 + colineation_point[2]**2)
-           
-            if colineation_point[2] > 0:
-                new_x = int(np.around(self.R + (self.radius_slider.value() * colineation_point[0]) / ground))
-                new_y = int(np.around(self.R + (self.radius_slider.value() * colineation_point[1]) / ground))
-                self.painter2.drawPoint(new_x, new_y)
-            elif colineation_point[2] < 0:
-                new_x = int(np.around(self.R + (-self.radius_slider.value() * colineation_point[0]) / ground))
-                new_y = int(np.around(self.R + (-self.radius_slider.value() * colineation_point[1]) / ground))
-                self.painter2.drawPoint(new_x, new_y)
+            basic_ground = np.sqrt(basic_colineation_point[0]**2 + basic_colineation_point[1]**2 + basic_colineation_point[2]**2)
+            if basic_colineation_point[2] > 0:
+                basic_new_x = int(np.around(self.R + (self.radius_slider.value() * basic_colineation_point[0]) / basic_ground))
+                basic_new_y = int(np.around(self.R + (self.radius_slider.value() * basic_colineation_point[1]) / basic_ground))
+                self.painter2.drawPoint(basic_new_x, basic_new_y)
+            elif basic_colineation_point[2] < 0:
+                basic_new_x = int(np.around(self.R + (-self.radius_slider.value() * basic_colineation_point[0]) / basic_ground))
+                basic_new_y = int(np.around(self.R + (-self.radius_slider.value() * basic_colineation_point[1]) / basic_ground))
+                self.painter2.drawPoint(basic_new_x, basic_new_y)
             else:
-                new_x1 = int(np.around(self.R + (self.radius_slider.value() * colineation_point[0]) / ground))
-                new_y1 = int(np.around(self.R + (self.radius_slider.value() * colineation_point[1]) / ground))
-                new_x2 = int(np.around(self.R + (-self.radius_slider.value() * colineation_point[0]) / ground))
-                new_y2 = int(np.around(self.R + (-self.radius_slider.value() * colineation_point[1]) / ground))
-                self.painter2.drawPoint(new_x1, new_y1)
-                self.painter2.drawPoint(new_x2, new_y2)
+                basic_new_x1 = int(np.around(self.R + (self.radius_slider.value() * basic_colineation_point[0]) / basic_ground))
+                basic_new_y1 = int(np.around(self.R + (self.radius_slider.value() * basic_colineation_point[1]) / basic_ground))
+                basic_new_x2 = int(np.around(self.R + (-self.radius_slider.value() * basic_colineation_point[0]) / basic_ground))
+                basic_new_y2 = int(np.around(self.R + (-self.radius_slider.value() * basic_colineation_point[1]) / basic_ground))
+                self.painter2.drawPoint(basic_new_x1, basic_new_y1)
+                self.painter2.drawPoint(basic_new_x2, basic_new_y2)
+            
+            self.painter2.setPen(QPen(
+                Qt.yellow, 1,
+                Qt.SolidLine,  
+                Qt.RoundCap,
+                Qt.RoundJoin
+            ))
+            rest_ground = np.sqrt(rest_colineation_point[0]**2 + rest_colineation_point[1]**2 + rest_colineation_point[2]**2)
+            if rest_colineation_point[2] > 0:
+                rest_new_x = int(np.around(self.R + (self.radius_slider.value() * rest_colineation_point[0]) / rest_ground))
+                rest_new_y = int(np.around(self.R + (self.radius_slider.value() * rest_colineation_point[1]) / rest_ground))
+                self.painter2.drawPoint(rest_new_x, rest_new_y)
+            elif rest_colineation_point[2] < 0:
+                rest_new_x = int(np.around(self.R + (-self.radius_slider.value() * rest_colineation_point[0]) / rest_ground))
+                rest_new_y = int(np.around(self.R + (-self.radius_slider.value() * rest_colineation_point[1]) / rest_ground))
+                self.painter2.drawPoint(rest_new_x, rest_new_y)
+            else:
+                rest_new_x1 = int(np.around(self.R + (self.radius_slider.value() * rest_colineation_point[0]) / rest_ground))
+                rest_new_y1 = int(np.around(self.R + (self.radius_slider.value() * rest_colineation_point[1]) / rest_ground))
+                rest_new_x2 = int(np.around(self.R + (-self.radius_slider.value() * rest_colineation_point[0]) / rest_ground))
+                rest_new_y2 = int(np.around(self.R + (-self.radius_slider.value() * rest_colineation_point[1]) / rest_ground))
+                self.painter2.drawPoint(rest_new_x1, rest_new_y1)
+                self.painter2.drawPoint(rest_new_x2, rest_new_y2)
 
 
     def draw_center(self):
